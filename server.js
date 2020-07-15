@@ -5,57 +5,61 @@ var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 server.listen(5000, '0.0.0.0');
 
-connections = []
+var connectionsBrowser = []
+var connectionsPopcorn = []
 
-let userTimes = {}
+var connectionsName = {};
+
+let connectionsTimes = {}
 
 console.log("server running");
 
 io.sockets.on('connection', function(socket) {
-    connections.push(socket);
-    console.log('Connected: %s sockets connected', connections.length);
 
-    userTimes[socket.id] = 0;
+    connectionsPopcorn.push(socket.id)
 
-    /*
-    socket.on('sendTime', time => {
-        userTimes[socket.id] = time;
-        console.log(socket.id + " " + time)
+    console.log('Connected: %s sockets connected', connectionsPopcorn.length + connectionsBrowser.length);
+
+    connectionsTimes[socket.id] = 0;
+
+    socket.on('browserMessage', id => {
+        connectionsPopcorn.splice(connectionsPopcorn.indexOf(id), 1);
+        connectionsBrowser.push(id);
     });
-    */
+
+    socket.on('time', time => {
+        connectionsTimes[socket.id] = time;
+    })
+
+    
+    socket.on('namesend', name => {
+        connectionsName[socket.id] = name;
+    });
 
     socket.on('disconnect', function() {
-        var i = connections.indexOf(socket);
-        connections.splice(i, 1);
-        console.log('Connected: %s sockets connected', connections.length);
+        if(connectionsBrowser.includes(socket.id)) {
+            var i = connectionsBrowser.indexOf(socket.id);
+            connectionsBrowser.splice(i, 1);
+            console.log('Browser disconnect!');
+        }
+        else {
+            var i = connectionsPopcorn.indexOf(socket.id);
+            connectionsPopcorn.splice(i, 1);
+            console.log("Popcorn disconnect!")
+        }
+        
     });
 });
+
+function getTimes() {
+    io.sockets.emit('requesttime');
+}
+
+setInterval(getTimes, 1000);
 
 app.get('/', function(req, res, next) {
-    res.sendFile(__dirname + '/yikes.html');
+    res.sendFile(__dirname + '/index.html');
 });
-
-/*
-setInterval(function() {
-    io.sockets.emit('requestTime');
-    let sum;
-    Object.keys(userTimes).forEach(function(socket) {
-        sum += userTimes[socket];
-    });
-
-    let average = sum / userTimes.length;
-    let total = 0;
-
-    Object.keys(userTimes).forEach(function(socket) {
-
-        let v = Math.pow(parseFloat(userTimes[socket])-average),2);
-        total += v;
-    });
-
-    console.log(Math.sqrt(total / userTimes.length))
-
-}, 5000);
-*/
 
 app.post('/', function (req, res) {
 
@@ -87,5 +91,38 @@ app.post('/', function (req, res) {
     }
     else {
     }
-    res.sendFile(__dirname + '/yikes.html');
+    res.sendFile(__dirname + '/index.html');
+});
+
+function decycle(obj, stack = []) {
+    if (!obj || typeof obj !== 'object')
+        return obj;
+    
+    if (stack.includes(obj))
+        return null;
+
+    let s = stack.concat([obj]);
+
+    return Array.isArray(obj)
+        ? obj.map(x => decycle(x, s))
+        : Object.fromEntries(
+            Object.entries(obj)
+                .map(([k, v]) => [k, decycle(v, s)]));
+}
+
+
+app.get('/getUsers', function(req, res) {
+    
+    let names = {};
+    
+    connectionsPopcorn.forEach(connection => {
+        //names.push(connectionsName[connection]);
+        names[connectionsName[connection]] = connectionsTimes[connection];
+
+    });
+
+    console.log(names)
+
+    //res.json(decycle(names));
+    res.json(names);
 });

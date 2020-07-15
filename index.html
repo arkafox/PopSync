@@ -15,7 +15,7 @@
     <div class="container" style="padding-bottom: 30px; padding-top: 30px">
         <div class="row justify-content-center">
             <div class="col-8">
-                <h2 align="center">Sync 2 Boomer</h2>
+                <h2 align="center"></h2>
                 <form action="/" method="POST" autocomplete="off">
                     <div class="form-group">
                         <input type="submit" name="syncreq" value="Play" class="btn btn-primary" id="submit-play">
@@ -26,18 +26,56 @@
                         <input type="submit" name="syncreq" value="Sync" class="btn btn-primary" id="submit-sync">
                     </div>
                 </form>
+                <div class="col-16" id="list_users">
+
+                </div>
             </div>
         </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-        crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
         integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
         crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
         integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
         crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js" crossorigin="anonymous"></script>
+    <script>
+
+        var socket = io.connect('http://127.0.0.1:5000');
+
+        socket.on('connect', () => {
+            socket.emit('browserMessage', socket.id);
+        });
+
+        var list = $('#list_users');
+
+        function updateClients() {
+            $.ajax({
+
+                'url': 'getUsers',
+                'type': 'GET',
+                'data': {
+                    'client_socket': socket.id
+                },
+                'success': function (data) {
+                    console.log(data);
+                    $('#list_users').empty();
+                    /*
+                    data.forEach(id => {
+                        $('#list_users').append('<li class="user_pop">' + id + '</li>');
+
+                    });
+                    */
+                },
+                'error': function (request, error) {
+                }
+            });
+        }
+
+        setInterval(updateClients, 1000);
+
+    </script>
 </body>
 
 </html>
