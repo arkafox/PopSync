@@ -28,9 +28,10 @@ io.sockets.on('connection', function(socket) {
     });
 
     socket.on('time', time => {
-        connectionsTimes[socket.id] = time;
+        if(time !== 0) {
+            connectionsTimes[socket.id] = time;
+        }
     })
-
     
     socket.on('namesend', name => {
         connectionsName[socket.id] = name;
@@ -55,7 +56,7 @@ function getTimes() {
     io.sockets.emit('requesttime');
 }
 
-setInterval(getTimes, 1000);
+setInterval(getTimes, 100);
 
 app.get('/', function(req, res, next) {
     res.sendFile(__dirname + '/index.html');
@@ -110,18 +111,24 @@ function decycle(obj, stack = []) {
                 .map(([k, v]) => [k, decycle(v, s)]));
 }
 
+app.post('/syncDirect')
 
 app.get('/getUsers', function(req, res) {
     
-    let names = {};
+    let names = []
     
     connectionsPopcorn.forEach(connection => {
-        //names.push(connectionsName[connection]);
-        names[connectionsName[connection]] = connectionsTimes[connection];
 
+        let time = connectionsTimes[connection];
+        console.log(time)
+
+        let user = {
+            "id": connection,
+            "name": connectionsName[connection],
+            "time": time
+        }
+        names.push(user);
     });
-
-    console.log(names)
 
     //res.json(decycle(names));
     res.json(names);

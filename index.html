@@ -16,16 +16,17 @@
         <div class="row justify-content-center">
             <div class="col-8">
                 <h2 align="center"></h2>
-                <form action="/" method="POST" autocomplete="off">
-                    <div class="form-group">
-                        <input type="submit" name="syncreq" value="Play" class="btn btn-primary" id="submit-play">
-                        <input type="submit" name="syncreq" value="Pause" class="btn btn-primary" id="submit-pause">
-                        <input type="text" name="hour" class="form-control" placeholder="Horas">
-                        <input type="text" name="minutes" class="form-control" placeholder="Minutos">
-                        <input type="text" name="seconds" class="form-control" placeholder="Segundos">
-                        <input type="submit" name="syncreq" value="Sync" class="btn btn-primary" id="submit-sync">
-                    </div>
-                </form>
+                <!--<form action="/" method="POST" autocomplete="off">-->
+                <div class="form-group">
+                    <input type="submit" name="syncreq" value="Play" class="btn btn-primary" id="submit-play"
+                        onclick="update('Play')">
+                    <input type="submit" name="syncreq" value="Pause" class="btn btn-primary" id="submit-pause" onclick="update('Pause')">
+                    <input type="text" name="hour" class="form-control" placeholder="Horas" id="hour_id">
+                    <input type="text" name="minutes" class="form-control" placeholder="Minutos" id=minutes_id>
+                    <input type="text" name="seconds" class="form-control" placeholder="Segundos" id="seconds_id">
+                    <input type="submit" name="syncreq" value="Sync" class="btn btn-primary" id="submit-sync" onclick="update('Sync')">
+                </div>
+                <!--</form>-->
                 <div class="col-16" id="list_users">
 
                 </div>
@@ -59,14 +60,16 @@
                     'client_socket': socket.id
                 },
                 'success': function (data) {
-                    console.log(data);
                     $('#list_users').empty();
-                    /*
-                    data.forEach(id => {
-                        $('#list_users').append('<li class="user_pop">' + id + '</li>');
-
+                    data.forEach(user => {
+                        let time = user.time;
+                        let hours = Math.floor(time / 3600);
+                        let minutes = Math.floor(time / 60) - (hours * 60);
+                        let seconds = Math.floor(time - (minutes * 60) - (hours * 60 * 60))
+                        $('#list_users').append(
+                            '<li class="user_pop">' + user.name + ' ' + hours + "h " + minutes + "m " + seconds + "s " + '</li>');
                     });
-                    */
+
                 },
                 'error': function (request, error) {
                 }
@@ -74,6 +77,25 @@
         }
 
         setInterval(updateClients, 1000);
+
+        function update(action) {
+
+            var hours = $("#hour_id").val();
+            var minutes = $("#minutes_id").val();
+            var seconds = $("#seconds_id").val();
+
+            $.ajax({
+
+                'url': '/',
+                'type': 'POST',
+                'data': {
+                    'syncreq': action,
+                    'hour': hours,
+                    'minutes': minutes,
+                    'seconds': seconds
+                },
+            });
+        }
 
     </script>
 </body>
