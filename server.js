@@ -120,7 +120,6 @@ app.get('/getUsers', function(req, res) {
     connectionsPopcorn.forEach(connection => {
 
         let time = connectionsTimes[connection];
-        console.log(time)
 
         let user = {
             "id": connection,
