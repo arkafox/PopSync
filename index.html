@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boomer Sync</title>
+    <title>PopSync</title>
     <!-- CSS only -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
         integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
@@ -15,18 +15,20 @@
     <div class="container" style="padding-bottom: 30px; padding-top: 30px">
         <div class="row justify-content-center">
             <div class="col-8">
-                <h2 align="center"></h2>
-                <!--<form action="/" method="POST" autocomplete="off">-->
-                <div class="form-group">
-                    <input type="submit" name="syncreq" value="Play" class="btn btn-primary" id="submit-play"
-                        onclick="update('Play')">
-                    <input type="submit" name="syncreq" value="Pause" class="btn btn-primary" id="submit-pause" onclick="update('Pause')">
-                    <input type="text" name="hour" class="form-control" placeholder="Horas" id="hour_id">
-                    <input type="text" name="minutes" class="form-control" placeholder="Minutos" id=minutes_id>
-                    <input type="text" name="seconds" class="form-control" placeholder="Segundos" id="seconds_id">
-                    <input type="submit" name="syncreq" value="Sync" class="btn btn-primary" id="submit-sync" onclick="update('Sync')">
-                </div>
-                <!--</form>-->
+                <h2 align="center">PopSync</h2>
+                <form action="/" method="POST" autocomplete="off">
+                    <div class="form-group">
+                        <input type="button" name="syncreq" value="Play" class="btn btn-primary" id="submit-play"
+                            onclick="update('Play')">
+                        <input type="button" name="syncreq" value="Pause" class="btn btn-primary" id="submit-pause"
+                            onclick="update('Pause')">
+                        <input type="text" name="hour" class="form-control" placeholder="Horas" id="hour_id">
+                        <input type="text" name="minutes" class="form-control" placeholder="Minutos" id=minutes_id>
+                        <input type="text" name="seconds" class="form-control" placeholder="Segundos" id="seconds_id">
+                        <input type="button" name="syncreq" value="Sync" class="btn btn-primary" id="submit-sync"
+                            onclick="update('Sync')">
+                    </div>
+                </form>
                 <div class="col-16" id="list_users">
 
                 </div>
@@ -43,10 +45,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js" crossorigin="anonymous"></script>
     <script>
 
-        var socket = io.connect('http://127.0.0.1:5000');
+        var socket = io('http://127.0.0.1:5000');
 
         socket.on('connect', () => {
             socket.emit('browserMessage', socket.id);
+        });
+
+        $('.syncreqbutton').on('click', e => {
+            console.log(e)
         });
 
         var list = $('#list_users');
@@ -66,8 +72,9 @@
                         let hours = Math.floor(time / 3600);
                         let minutes = Math.floor(time / 60) - (hours * 60);
                         let seconds = Math.floor(time - (minutes * 60) - (hours * 60 * 60))
+                        let input = "<input type='submit' name='syncreqdirect' value='Sincronizar com este' class='btn btn-primary btn-sm' id='submit-play' onClick='syncDirect(\"" + user.id + "\")' />";
                         $('#list_users').append(
-                            '<li class="user_pop">' + user.name + ' ' + hours + "h " + minutes + "m " + seconds + "s " + '</li>');
+                            '<div class="row user_sync"><li class="user_pop col-sm-5">' + user.name + ' ' + hours + "h " + minutes + "m " + seconds + "s</li>" + input + "</div><hr>");
                     });
 
                 },
@@ -96,6 +103,20 @@
                 },
             });
         }
+
+        function syncDirect(connection) {
+            console.log(syncDirect)
+            $.ajax({
+
+                'url': '/syncDirect',
+                'type': 'POST',
+                'data': {
+                    'connection': connection
+                },
+            });
+        }
+
+
 
     </script>
 </body>

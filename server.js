@@ -10,13 +10,15 @@ var connectionsPopcorn = []
 
 var connectionsName = {};
 
-let connectionsTimes = {}
+var connectionsTimes = {};
 
 console.log("server running");
 
 io.sockets.on('connection', function(socket) {
 
     connectionsPopcorn.push(socket.id)
+
+    connectionsName[socket.id] = socket.handshake.query.name;
 
     console.log('Connected: %s sockets connected', connectionsPopcorn.length + connectionsBrowser.length);
 
@@ -111,7 +113,9 @@ function decycle(obj, stack = []) {
                 .map(([k, v]) => [k, decycle(v, s)]));
 }
 
-app.post('/syncDirect')
+app.post('/syncDirect', function(req,res) {
+    io.sockets.emit('sync', connectionsTimes[req.body.connection]);
+})
 
 app.get('/getUsers', function(req, res) {
     
@@ -128,7 +132,5 @@ app.get('/getUsers', function(req, res) {
         }
         names.push(user);
     });
-
-    //res.json(decycle(names));
     res.json(names);
 });
